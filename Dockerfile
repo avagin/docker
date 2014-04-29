@@ -80,6 +80,10 @@ RUN	cd /usr/local/go/src && bash -xc 'for platform in $DOCKER_CROSSPLATFORMS; do
 # Grab Go's cover tool for dead-simple code coverage testing
 RUN	go get code.google.com/p/go.tools/cmd/cover
 
+RUN	go get code.google.com/p/goprotobuf/proto
+RUN	go get code.google.com/p/goprotobuf/protoc-gen-go
+RUN	go get github.com/avagin/libct/go
+
 # TODO replace FPM with some very minimal debhelper stuff
 RUN	gem install --no-rdoc --no-ri fpm --version 1.0.2
 
