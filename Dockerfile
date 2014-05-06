@@ -82,7 +82,7 @@ RUN	go get code.google.com/p/go.tools/cmd/cover
 
 RUN	go get code.google.com/p/goprotobuf/proto
 RUN	go get code.google.com/p/goprotobuf/protoc-gen-go
-RUN	echo libct-v0.11.1
+RUN	echo libct-v0.12.4
 RUN	go get github.com/avagin/libct/go
 
 # TODO replace FPM with some very minimal debhelper stuff

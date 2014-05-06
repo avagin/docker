@@ -6,6 +6,7 @@ import (
 	libct "github.com/avagin/libct/go"
 	"github.com/dotcloud/docker/daemon/execdriver"
 	"github.com/dotcloud/docker/pkg/cgroups"
+	"github.com/dotcloud/docker/pkg/system"
 	"github.com/dotcloud/docker/utils"
 	"io/ioutil"
 	"log"
@@ -96,9 +97,22 @@ func (d *driver) generateEnvConfig(c *execdriver.Command) error {
 }
 
 func (d *driver) Run(c *execdriver.Command, pipes *execdriver.Pipes, startCallback execdriver.StartCallback) (int, error) {
-	if err := execdriver.SetTerminal(c, pipes); err != nil {
+
+	term := getTerminal(c, pipes)
+	if c.Tty {
+		master, console, err := system.CreateMasterAndConsole()
+		if err != nil {
+			return -1, err
+		}
+		term.SetMaster(master)
+		c.Console = console
+	}
+	term_pipes, err := term.Attach()
+	if err != nil {
 		return -1, err
 	}
+	defer term.Close()
+
 	if err := d.generateEnvConfig(c); err != nil {
 		return -1, err
 	}
@@ -198,9 +212,15 @@ func (d *driver) Run(c *execdriver.Command, pipes *execdriver.Pipes, startCallba
 	c.Path = aname
 	c.Args = append([]string{name}, arg...)
 
-	env := make([]string, 0)
+	var t *libct.Pipes;
 
-	pid, err := ct.Run(aname, c.Args, env, nil)
+	t = nil
+
+	if term_pipes != nil {
+		t = &libct.Pipes{	int(term_pipes.Stdin.Fd()), int(term_pipes.Stdout.Fd()), int(term_pipes.Stderr.Fd()) };
+	}
+
+	pid, err := ct.Run(aname, c.Args, c.Env, t)
 	if err != nil {
 		return -1, err
 	}
