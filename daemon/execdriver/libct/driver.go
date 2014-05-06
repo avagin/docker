@@ -16,6 +16,7 @@ import (
 	"strings"
 	"strconv"
 	"syscall"
+	"time"
 )
 
 const DriverName = "libct"
@@ -210,9 +211,26 @@ func (d *driver) Run(c *execdriver.Command, pipes *execdriver.Pipes, startCallba
 		startCallback(c)
 	}
 
-	waitErr := ct.Wait()
+	err = nil
 
-	return 0, waitErr // FIXME
+//	err := ct.Wait()
+//
+//	FIXME: libct can't handle a few commands simultaneously.
+//	It will be fixed soon. As a workaround we can check the
+//	container state periodically.
+	for ;; {
+		time.Sleep(1 * time.Second)
+		state, err := ct.State()
+		if err != nil {
+			break;
+		}
+		if state != libct.CT_RUNNING {
+			break;
+		}
+	}
+	fmt.Println(err)
+
+	return 0, err
 }
 
 // TODO: This can be moved to the mountinfo reader in the mount pkg
@@ -274,19 +292,12 @@ type info struct {
 	state  int
 }
 
-const (
-        CT_ERROR        = -1
-        CT_STOPPED      = 0
-        CT_RUNNING      = 1
-)
-
-
 func (i *info) IsRunning() bool {
-	return i.state == CT_RUNNING
+	return i.state == libct.CT_RUNNING
 }
 
 func (d *driver) Info(id string) execdriver.Info {
-	state := CT_ERROR
+	state := libct.CT_ERROR
 
 	ct, err := d.session.OpenCt(id)
 	if err == nil {
