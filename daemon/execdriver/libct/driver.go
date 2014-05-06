@@ -1,6 +1,7 @@
 package libct
 
 import (
+	"encoding/json"
 	"fmt"
 	libct "github.com/avagin/libct/go"
 	"github.com/dotcloud/docker/daemon/execdriver"
@@ -82,8 +83,22 @@ func (d *driver) Name() string {
 	return fmt.Sprintf("%s", DriverName)
 }
 
+func (d *driver) generateEnvConfig(c *execdriver.Command) error {
+	data, err := json.Marshal(c.Env)
+	if err != nil {
+		return err
+	}
+	p := path.Join(d.root, "containers", c.ID, "config.env")
+	c.Mounts = append(c.Mounts, execdriver.Mount{p, "/.dockerenv", false, true})
+
+	return ioutil.WriteFile(p, data, 0600)
+}
+
 func (d *driver) Run(c *execdriver.Command, pipes *execdriver.Pipes, startCallback execdriver.StartCallback) (int, error) {
 	if err := execdriver.SetTerminal(c, pipes); err != nil {
+		return -1, err
+	}
+	if err := d.generateEnvConfig(c); err != nil {
 		return -1, err
 	}
 	ct, err := d.session.CreateCt(c.ID)
