@@ -14,8 +14,8 @@ import (
 	"os/exec"
 	"path"
 	"path/filepath"
-	"strings"
 	"strconv"
+	"strings"
 	"syscall"
 	"time"
 )
@@ -64,7 +64,7 @@ type driver struct {
 	root       string // root path for the driver to use
 	apparmor   bool
 	sharedRoot bool
-	session	   *libct.Session
+	session    *libct.Session
 }
 
 func NewDriver(root string, apparmor bool) (*driver, error) {
@@ -77,7 +77,7 @@ func NewDriver(root string, apparmor bool) (*driver, error) {
 		apparmor:   apparmor,
 		root:       root,
 		sharedRoot: rootIsShared(),
-		session: s,
+		session:    s,
 	}, nil
 }
 
@@ -125,27 +125,27 @@ func (d *driver) Run(c *execdriver.Command, pipes *execdriver.Pipes, startCallba
 		fmt.Println("%s %s", m.Source, m.Destination)
 		ct.AddMount(m.Source, m.Destination) // FIXME
 	}
-	if (c.Tty) {
+	if c.Tty {
 		fmt.Println("%s", c.Console)
 		ct.AddMount(c.Console, "/dev/console")
 	}
 
-	err = ct.SetOption(1);
+	err = ct.SetOption(1)
 	if err != nil {
 		return -1, err
 	}
 
-	err = ct.SetFsRoot(c.Rootfs);
+	err = ct.SetFsRoot(c.Rootfs)
 	if err != nil {
 		return -1, err
 	}
 
-	err = ct.SetFsRoot(c.Rootfs);
+	err = ct.SetFsRoot(c.Rootfs)
 	if err != nil {
 		return -1, err
 	}
 
-	err = ct.SetNsMask(syscall.CLONE_NEWNS | syscall.CLONE_NEWPID);
+	err = ct.SetNsMask(syscall.CLONE_NEWNS | syscall.CLONE_NEWPID)
 	if err != nil {
 		return -1, err
 	}
@@ -212,12 +212,12 @@ func (d *driver) Run(c *execdriver.Command, pipes *execdriver.Pipes, startCallba
 	c.Path = aname
 	c.Args = append([]string{name}, arg...)
 
-	var t *libct.Pipes;
+	var t *libct.Pipes
 
 	t = nil
 
 	if term_pipes != nil {
-		t = &libct.Pipes{	int(term_pipes.Stdin.Fd()), int(term_pipes.Stdout.Fd()), int(term_pipes.Stderr.Fd()) };
+		t = &libct.Pipes{int(term_pipes.Stdin.Fd()), int(term_pipes.Stdout.Fd()), int(term_pipes.Stderr.Fd())}
 	}
 
 	pid, err := ct.Run(aname, c.Args, c.Env, t)
@@ -233,19 +233,19 @@ func (d *driver) Run(c *execdriver.Command, pipes *execdriver.Pipes, startCallba
 
 	err = nil
 
-//	err := ct.Wait()
-//
-//	FIXME: libct can't handle a few commands simultaneously.
-//	It will be fixed soon. As a workaround we can check the
-//	container state periodically.
-	for ;; {
+	//err := ct.Wait()
+	//
+	// FIXME: libct can't handle a few commands simultaneously.
+	// It will be fixed soon. As a workaround we can check the
+	// container state periodically.
+	for {
 		time.Sleep(1 * time.Second)
 		state, err := ct.State()
 		if err != nil {
-			break;
+			break
 		}
 		if state != libct.CT_RUNNING {
-			break;
+			break
 		}
 	}
 	fmt.Println(err)
@@ -327,7 +327,7 @@ func (d *driver) Info(id string) execdriver.Info {
 	return &info{
 		ID:     id,
 		driver: d,
-		state:	state,
+		state:  state,
 	}
 }
 
