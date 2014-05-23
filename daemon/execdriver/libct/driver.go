@@ -220,12 +220,13 @@ func (d *driver) Run(c *execdriver.Command, pipes *execdriver.Pipes, startCallba
 		t = &libct.Pipes{int(term_pipes.Stdin.Fd()), int(term_pipes.Stdout.Fd()), int(term_pipes.Stderr.Fd())}
 	}
 
-	pid, err := ct.Run(aname, c.Args, c.Env, t)
+	//pid, err := ct.Run(aname, c.Args, c.Env, t) FIXME
+	err = ct.Run(aname, c.Args, c.Env, t)
 	if err != nil {
 		return -1, err
 	}
 
-	c.ContainerPid = int(pid)
+	//c.ContainerPid = int(pid)
 
 	if startCallback != nil {
 		startCallback(c)
